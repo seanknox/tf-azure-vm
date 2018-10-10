@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eu
+TF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
+TFVARS_PATH="${1:-"$TF_DIR/terraform.tfvars"}"
+
+$TF_DIR/scripts/helpers/ensure_user_auth
+
+printf "Determining alias: "
+email=$(az account show -o json | jq -r '.user.name')
+ALIAS=${email%*@microsoft.com}
+echo $ALIAS
+
+printf "Getting user object_id: "
+USER_OBJECT_ID=$(az ad user show -o json --upn-or-object-id "$email"  | jq -r '.objectId')
+echo $USER_OBJECT_ID
+
+$TF_DIR/scripts/helpers/set_subscription_from_menu $ALIAS
+SUBSCRIPTION_ID=$(az account show -o json | jq -r '.id')
+echo "Using subscription: $SUBSCRIPTION_ID"
+
+LOCATION=$(scripts/helpers/choose_location_from_list)
+echo "Using Location: $LOCATION"
+
+echo
+echo "Writing $TFVARS_PATH"
+echo "alias=\"$ALIAS\"" > "$TFVARS_PATH"
+echo "user_object_id=\"$USER_OBJECT_ID\"" >> "$TFVARS_PATH"
+echo "subscription_id=\"$SUBSCRIPTION_ID\"" >> "$TFVARS_PATH"
+echo "location=\"$LOCATION\"" >> "$TFVARS_PATH"
+

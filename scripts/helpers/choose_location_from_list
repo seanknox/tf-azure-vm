@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -eu
+exec 3>&1
+exec >&2
+
+if [[ ! -z "${LOCATION:-}" ]]; then
+  echo $LOCATION >&3
+  exit 0
+fi
+
+PREFERRED_SLUG=${1:-}
+
+echo "Fetching locations..."
+export LOCATIONS_LIST="$(az account list-locations -o json | jq -r '.[] | .name' | sort)"
+
+if [[ ! -z "$PREFERRED_SLUG" ]]; then
+  guess=$(grep -m 1 "$PREFERRED_SLUG" <<<"LOCATIONS_LIST" || :)
+  if [[ ! -z "$guess" ]]; then
+    read -p "Do you want to use the location \"$guess\"? " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      echo "$guess" >&3
+      exit 0
+    fi
+    echo
+  fi
+fi
+
+locations=()
+while IFS="\n" read -r location; do
+    locations+=( "$location" )
+done < <(echo "$LOCATIONS_LIST")
+
+PS3="Which location do you want to use? "
+select location in "${locations[@]}"; do
+  echo "$location" >&3
+  break
+done

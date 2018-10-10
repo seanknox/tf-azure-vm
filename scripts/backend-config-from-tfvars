@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -eu
+
+TFVARS_PATH=$1
+BACKEND_CONFIGS_PATH=$2
+
+eval "$(scripts/helpers/load_access_key.sh)"
+
+function get_var_value() {
+  grep "${1}=" "$TFVARS_PATH" | cut -d= -f2 | xargs echo
+}
+
+
+cat <<EOF > $BACKEND_CONFIGS_PATH
+access_key = "$ARM_ACCESS_KEY"
+
+storage_account_name = "aksterraformstoragedev"
+container_name = "terraform-backend-state"
+key = "dev2/$(get_var_value location)/$(get_var_value alias).tfstate"
+EOF

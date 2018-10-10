@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -eu
+# https://github.com/Azure/azure-cli/issues/6265
+export AZURE_CORE_COLLECT_TELEMETRY=no
+export AZURE_CORE_OUTPUT=json
+
+declare -r 'CHECKMARK=\xe2\x9c\x94'
+declare -r 'EXMARK=\xe2\x9c\x98'
+
+HELPERS_DIR="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd -P)"
+source $HELPERS_DIR/azctx.sh
+
+if [[ ! -f "$AZURE_CONFIG_DIR/accessTokens.json" ]]; then
+  echo "ERROR: Not currently logged in at all"
+
+  email_ctx=$( azctx list | grep '@microsoft.com' | head -1 )
+  if [[ ! -z "$email_ctx" ]]; then
+    echo "Found saved azctx '$email_ctx' switching you to that:" >&2
+    azctx "$email_ctx" >&2
+  else
+    az login
+  fi
+fi
+
+AZ_USER_TYPE=$(az account show -o json | jq -j '.user.type')
+
+printf "Checking logged in as user (not servicePrincipal): "
+
+if [[ "$AZ_USER_TYPE" == "user" ]]; then
+  printf "$CHECKMARK\n"
+elif [[ "$AZ_USER_TYPE" == "servicePrincipal" ]]; then
+  printf "$EXMARK\n"
+  echo "ERROR: You're logged in as a service principal" >&2
+  echo "" >&2
+
+   email_ctx=$( azctx list | grep '@microsoft.com' | head -1 )
+  if [[ ! -z "$email_ctx" ]]; then
+    echo "Found saved azctx '$email_ctx' switching you to that:" >&2
+    azctx "$email_ctx" >&2
+  else
+    azctx save >&2
+    az login
+  fi
+
+else
+  printf "$EXMARK\n"
+  exec >&2
+  echo
+  echo "FATAL: Logged in as an unknown type! D:"
+  echo " az account show :"
+  az account show
+  exit 1
+fi

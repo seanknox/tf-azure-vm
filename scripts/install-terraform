@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Ensure that Terraform of version $TERRAFORM_VERSION is installed at $TERRAFORM_PATH/terraform
+TERRAFORM_PATH=${1:-/usr/local/bin}
+TERRAFORM_VERSION=0.11.8
+
+set -eu
+
+# Macs and some linux distros come with curl but not wget, but wget
+# is part of busybox, so some small linux distros are just gonna have that
+function download() {
+  url=$1
+  filename=$2
+  if which curl &> /dev/null; then
+    curl -o $2 $1
+  else
+    wget -O $2 $1
+  fi
+}
+
+# only go sudoing if we actually need to for the given path
+if [[ "$(ls -ld ${TERRAFORM_PATH} | awk '{print $3}')" != "$USER" ]]; then
+  export maybe_sudo=sudo
+else
+  export maybe_sudo=""
+fi
+
+printf "Checking for ${TERRAFORM_PATH}/terraform: "
+if test -x ${TERRAFORM_PATH}/terraform; then
+  echo "It's There."
+
+  printf "Checking terraform version: "
+  version=$(${TERRAFORM_PATH}/terraform version | head -1 | grep -o '[0-9\.]\+')
+  if [[ "$version" != "$TERRAFORM_VERSION" ]]; then
+    echo "Expected v${TERRAFORM_VERSION}, but found v${version}"
+
+
+    if which brew &> /dev/null && [[ "$TERRAFORM_PATH" == "$(brew --prefix)/bin" ]]; then
+        brew unlink terraform 2> /dev/null || :
+    fi
+
+    if test -f ${TERRAFORM_PATH}/terraform; then
+      read -p "Can I run '$maybe_sudo rm -f ${TERRAFORM_PATH}/terraform' and continue install? " -n 1 -r
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+        $maybe_sudo rm -f ${TERRAFORM_PATH}/terraform
+        echo
+      else
+        echo "Aborting script."
+        exit 1
+      fi
+    fi
+  else
+    echo "correct ($TERRAFORM_VERSION)"
+    echo
+  fi
+else
+  echo "Not found"
+fi
+
+if ! test -x ${TERRAFORM_PATH}/terraform; then
+  echo "installing ${TERRAFORM_PATH}/terraform"
+  download \
+    https://releases.hashicorp.com/terraform/$TERRAFORM_VERSION/terraform_${TERRAFORM_VERSION}_$(uname -s | tr '[:upper:]' '[:lower:]')_amd64.zip \
+    ${TMPDIR:-/tmp}/terraform.zip
+  (cd $TERRAFORM_PATH && $maybe_sudo unzip ${TMPDIR:-/tmp}/terraform.zip)
+  echo
+fi
+
+if [[ "$(which terraform || :)" != "${TERRAFORM_PATH}/terraform" ]] ; then
+  echo
+  echo "WARNING: $TERRAFORM_PATH/terraform is not the first terraform in your path ($(which terraform))"
+  echo "Please run: "
+  echo "  export PATH=$(cd $TERRAFORM_PATH && pwd):\$PATH"
+  echo "or be sure to invoke as: $TERRAFORM_PATH/terraform"
+fi
+

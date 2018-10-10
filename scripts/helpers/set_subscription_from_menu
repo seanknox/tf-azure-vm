@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eu
+
+PREFERRED_SLUG=${1:-}
+
+echo "Fetching subscriptions..."
+export SUBSCRIPTIONS_LIST="$(az account list -o json | jq -r '.[] | .name' | sort)"
+
+if [[ ! -z "$PREFERRED_SLUG" ]]; then
+  guess=$(grep -m 1 "$PREFERRED_SLUG" <<<"$SUBSCRIPTIONS_LIST" || :)
+  if [[ ! -z "$guess" ]]; then
+    read -p "Do you want to use the subscription \"$guess\"? " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      az account set -s "$guess"
+      exit 0
+    fi
+    echo
+  fi
+fi
+
+subscriptions=()
+while IFS="\n" read -r sub; do
+    subscriptions+=( "$sub" )
+done < <(echo "$SUBSCRIPTIONS_LIST")
+
+PS3="Which subscription do you want to use? "
+select sub_name in "${subscriptions[@]}"; do
+  az account set -s "$sub_name"
+  break
+done
