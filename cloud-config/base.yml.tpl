@@ -54,7 +54,9 @@ packages:
   - fail2ban
   - git
   - htop
+  - jq
   - language-pack-en-base
+  - make
   - tmux
   - vim
   - wget
