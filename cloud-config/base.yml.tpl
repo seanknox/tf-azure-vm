@@ -95,5 +95,3 @@ timezone: US/Pacific
 runcmd:
   - usermod -G docker ${admin_username}
   - systemctl enable docker
-
-  # TODO: swap using waagent.conf
