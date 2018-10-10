@@ -30,4 +30,4 @@ backend-config.tfvars: terraform.tfvars
 	./scripts/helpers/ensure_user_auth
 	terraform init -backend-config backend-config.tfvars
 
-.PHONY: plan apply destroy validate
+.PHONY: ssh build destroy
