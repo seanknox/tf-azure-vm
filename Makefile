@@ -22,12 +22,9 @@ destroy: .terraform/terraform.tfstate terraform.tfvars
 terraform.tfvars:
 	./scripts/make-dev-tfvars $@
 
-backend-config.tfvars: terraform.tfvars
-	./scripts/backend-config-from-tfvars $^ $@
-
-.terraform/terraform.tfstate: backend-config.tfvars
+.terraform/terraform.tfstate:
 	./scripts/install-terraform $(shell dirname $(TERRAFORM_BIN))
 	./scripts/helpers/ensure_user_auth
-	terraform init -backend-config backend-config.tfvars
+	terraform init
 
 .PHONY: ssh build destroy
