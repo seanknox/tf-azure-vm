@@ -158,3 +158,4 @@ timezone: US/Pacific
 runcmd:
   - usermod -G docker ${admin_username}
   - systemctl enable docker
+  - az aks install-cli --client-version 1.10.7
