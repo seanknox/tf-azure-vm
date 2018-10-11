@@ -3,7 +3,7 @@
 Quickly spin up a (semi-)hardened Linux VM with [Docker CE][dockerce], [azure-cli][azurecli], and other tools preinstalled using [Terraform][terraform] on your laptop.
 
 ## What you get
-- Single Standard_B2ms Linux VM running Ubuntu 18.04 Bionic
+- Single Standard_B2ms Linux VM running Ubuntu 18.04 Bionic using an Azure subscription and region of your choice
 - VM reachable at public IP/FQDN based on your Azure alias
 - Installed packages: Docker CE, azure-cli, fail2ban, automake, git, vim, tmux, and a handful of other tools.
 - Network Security Group configured to allow only SSH incoming (protected by [fail2ban][fail2ban])
@@ -14,12 +14,13 @@ Quickly spin up a (semi-)hardened Linux VM with [Docker CE][dockerce], [azure-cl
 [fail2ban]: https://www.fail2ban.org/wiki/index.php/Main_Page
 
 ## Running
-1. Install Terraform: https://www.terraform.io/downloads.html
 1. Clone the repo to your machine and `cd tf-azure-vm`
 1. Run:
 ```
 make build
 ```
+
+`make build` will install and then setup Terraform, and then build out all infrastructure.
 
 ## Want to tear everything down?
 `make destroy` will remove all infrastructure created.
