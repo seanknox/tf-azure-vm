@@ -19,12 +19,12 @@ resource "azurerm_network_security_group" "inbound" {
 }
 
 resource "azurerm_public_ip" "linux" {
-  name                         = "${var.name}"
-  location                     = "${var.location}"
-  resource_group_name          = "${var.resource_group_name}"
-  public_ip_address_allocation = "Dynamic"
-  idle_timeout_in_minutes      = 30
-  domain_name_label            = "${var.resource_group_name}"
+  name                    = "${var.name}"
+  location                = "${var.location}"
+  resource_group_name     = "${var.resource_group_name}"
+  allocation_method       = "Dynamic"
+  idle_timeout_in_minutes = 30
+  domain_name_label       = "${var.resource_group_name}"
 
   tags = "${var.tags}"
 }
@@ -56,7 +56,7 @@ resource "azurerm_virtual_machine" "linux" {
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
-  storage_image_reference = {
+  storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "18.04-LTS"
@@ -79,7 +79,7 @@ resource "azurerm_virtual_machine" "linux" {
   os_profile_linux_config {
     disable_password_authentication = true
 
-    ssh_keys = {
+    ssh_keys {
       key_data = "${var.ssh_key}"
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
     }

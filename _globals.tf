@@ -7,7 +7,7 @@ variable "location" {
 }
 
 variable "alias" {
-	type = "string"
+  type = "string"
 }
 
 variable "ssh_key" {
@@ -36,5 +36,5 @@ variable "cloud_config" {
 }
 
 output "fqdn" {
-  value = "${ module.vm.fqdn }"
+  value = "${module.vm.fqdn}"
 }

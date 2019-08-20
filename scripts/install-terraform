@@ -2,7 +2,7 @@
 
 # Ensure that Terraform of version $TERRAFORM_VERSION is installed at $TERRAFORM_PATH/terraform
 TERRAFORM_PATH=${1:-/usr/local/bin}
-TERRAFORM_VERSION=0.11.8
+TERRAFORM_VERSION=0.12.6
 
 set -eu
 
